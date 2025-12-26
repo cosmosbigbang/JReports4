@@ -33,7 +33,7 @@ class _SensorFormState extends State<SensorForm> {
   final _formKey = GlobalKey<FormState>();
   final _siteNameController = TextEditingController();
   final _companyController = TextEditingController(text: '(주)지반계측');
-  final _serverIpController = TextEditingController(text: '192.168.219.139');
+  final _serverUrlController = TextEditingController(text: 'http://192.168.219.139:8000');
   final _tController = TextEditingController(text: '0');
   final _cController = TextEditingController(text: '0');
   final _seController = TextEditingController(text: '0');
@@ -76,7 +76,7 @@ class _SensorFormState extends State<SensorForm> {
       final siteAddress = extractAddress(siteName);
 
       final response = await http.post(
-        Uri.parse('http://${_serverIpController.text}:8000/api/generate-excel/'),
+        Uri.parse('${_serverUrlController.text}/api/generate-excel/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'site_name': siteName,
@@ -187,15 +187,15 @@ class _SensorFormState extends State<SensorForm> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
-                      controller: _serverIpController,
+                      controller: _serverUrlController,
                       decoration: const InputDecoration(
-                        labelText: 'PC 서버 IP 주소',
-                        hintText: '예: 192.168.0.100',
+                        labelText: '서버 주소',
+                        hintText: '예: https://jreports4.onrender.com',
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'PC IP 주소를 입력하세요';
+                          return '서버 주소를 입력하세요';
                         }
                         return null;
                       },
@@ -329,7 +329,7 @@ class _SensorFormState extends State<SensorForm> {
   void dispose() {
     _siteNameController.dispose();
     _companyController.dispose();
-    _serverIpController.dispose();
+    _serverUrlController.dispose();
     _tController.dispose();
     _cController.dispose();
     _seController.dispose();

@@ -44,9 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # [DeepSync] 필수 모듈 추가
-    'rest_framework',
     'reports',
 ]
 
