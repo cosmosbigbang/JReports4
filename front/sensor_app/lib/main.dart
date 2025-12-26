@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -96,8 +99,41 @@ class _SensorFormState extends State<SensorForm> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final files = data['files'] as List;
+        
+        // 저장소 권한 요청
+        var status = await Permission.storage.request();
+        if (!status.isGranted) {
+          status = await Permission.manageExternalStorage.request();
+        }
+        
+        // 다운로드 폴더 경로 가져오기
+        Directory? downloadsDir;
+        if (Platform.isAndroid) {
+          downloadsDir = Directory('/storage/emulated/0/Download/$siteAddress');
+        } else {
+          downloadsDir = await getApplicationDocumentsDirectory();
+        }
+        
+        if (!await downloadsDir.exists()) {
+          await downloadsDir.create(recursive: true);
+        }
+        
+        // 각 파일 저장
+        int savedCount = 0;
+        for (var file in files) {
+          final filename = file['filename'] as String;
+          final base64Data = file['data'] as String;
+          final bytes = base64Decode(base64Data);
+          
+          final filePath = '${downloadsDir.path}/$filename';
+          final fileObj = File(filePath);
+          await fileObj.writeAsBytes(bytes);
+          savedCount++;
+        }
+        
         setState(() {
-          _resultMessage = '✅ 생성 완료!\n폴더: ${data['folder']}\n파일: ${data['files'].length}개\n시간: ${data['elapsed_time']}초';
+          _resultMessage = '✅ 생성 완료!\n저장 위치: ${downloadsDir.path}\n파일: $savedCount개\n시간: ${data['elapsed_time']}초';
         });
       } else {
         setState(() {

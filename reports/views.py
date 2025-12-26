@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import base64
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, render
@@ -159,13 +160,26 @@ def generate_excel(request):
             elapsed_time = round(time.time() - start_time, 2)
             
             if result:
+                # 파일들을 base64로 인코딩
+                files_data = []
+                for sensor_type, file_path in result.items():
+                    if os.path.exists(file_path):
+                        with open(file_path, 'rb') as f:
+                            file_content = f.read()
+                            encoded = base64.b64encode(file_content).decode('utf-8')
+                            files_data.append({
+                                'type': sensor_type,
+                                'filename': os.path.basename(file_path),
+                                'data': encoded
+                            })
+                
                 return JsonResponse({
                     'status': 'success',
                     'site_name': site_name or site_address,
                     'folder': f'generated_excels/{site_address}',
-                    'files': list(result.values()),
+                    'files': files_data,
                     'counts': counts,
-                    'time': elapsed_time
+                    'elapsed_time': elapsed_time
                 })
             else:
                 return JsonResponse({'status': 'error', 'message': '파일 생성 실패'}, status=500)
