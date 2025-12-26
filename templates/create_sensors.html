@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계측기 엑셀 생성 - J Reports</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .sensor-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        .sensor-item label {
+            color: #667eea;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+        .sensor-item input {
+            background: white;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 계측기 엑셀 파일 생성</h1>
+        <p class="subtitle">프로젝트명과 계측기 수량을 입력하세요</p>
+        
+        <form id="sensorForm">
+            <div class="form-group">
+                <label for="siteName">현장명</label>
+                <input type="text" id="siteName" name="siteName" 
+                       placeholder="예: 한남동 383-1 근린생활시설 신축공사" required>
+                <small style="color: #999; font-size: 12px;">주소가 자동으로 추출되어 폴더명으로 사용됩니다</small>
+            </div>
+
+            <div class="form-group">
+                <label for="company">계측관리업체</label>
+                <input type="text" id="company" name="company" 
+                       placeholder="예: (주)지반계측" required>
+            </div>
+
+            <div class="sensor-grid">
+                <div class="sensor-item">
+                    <label for="T">건물경사계 (T)</label>
+                    <input type="number" id="T" name="T" value="0" min="0" max="100">
+                </div>
+                <div class="sensor-item">
+                    <label for="C">균열측정계 (C)</label>
+                    <input type="number" id="C" name="C" value="0" min="0" max="100">
+                </div>
+                <div class="sensor-item">
+                    <label for="SE">지표침하계 (SE)</label>
+                    <input type="number" id="SE" name="SE" value="0" min="0" max="100">
+                </div>
+                <div class="sensor-item">
+                    <label for="S">변형률계 (S)</label>
+                    <input type="number" id="S" name="S" value="0" min="0" max="100">
+                </div>
+                <div class="sensor-item">
+                    <label for="W">지하수위계 (W)</label>
+                    <input type="number" id="W" name="W" value="0" min="0" max="100">
+                </div>
+                <div class="sensor-item">
+                    <label for="I">지중경사계 (I)</label>
+                    <input type="number" id="I" name="I" value="0" min="0" max="100">
+                </div>
+            </div>
+
+            <button type="submit">엑셀 파일 생성하기 🚀</button>
+        </form>
+
+        <div class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #667eea;">파일 생성 중...</p>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        // 현장명에서 주소 추출 함수
+        function extractAddress(siteName) {
+            // 패턴 1: "한남동 383-1" 형식
+            let match = siteName.match(/([가-힣]+동)\s*(\d+[-\d]*)/);
+            if (match) {
+                return `${match[1]}_${match[2]}`;
+            }
+            
+            // 패턴 2: "한남동" 만 있는 경우
+            match = siteName.match(/([가-힣]+동)/);
+            if (match) {
+                return match[1];
+            }
+            
+            // 패턴 3: 공백을 언더스코어로 변환
+            return siteName.replace(/\s+/g, '_').replace(/[^\w가-힣-]/g, '');
+        }
+
+        document.getElementById('sensorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const siteName = document.getElementById('siteName').value;
+            const company = document.getElementById('company').value;
+            const siteAddress = extractAddress(siteName);
+            const counts = {
+                T: parseInt(document.getElementById('T').value) || 0,
+                C: parseInt(document.getElementById('C').value) || 0,
+                SE: parseInt(document.getElementById('SE').value) || 0,
+                S: parseInt(document.getElementById('S').value) || 0,
+                W: parseInt(document.getElementById('W').value) || 0,
+                I: parseInt(document.getElementById('I').value) || 0
+            };
+
+            // 로딩 표시
+            document.querySelector('.loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/generate-excel/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        site_name: siteName,
+                        site_address: siteAddress,
+                        company: company,
+                        counts: counts
+                    })
+                });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('result');
+                
+                document.querySelector('.loading').style.display = 'none';
+                resultDiv.style.display = 'block';
+
+                if (data.status === 'success') {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ 생성 완료!</strong><br>
+                        🏗️ 현장: ${data.site_name}<br>
+                        📁 폴더: ${data.folder}<br>
+                        📄 파일: ${data.files.join(', ')}<br>
+                        ⏱️ 소요시간: ${data.time}초
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>❌ 오류:</strong> ${data.message}`;
+                }
+            } catch (error) {
+                document.querySelector('.loading').style.display = 'none';
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ 오류:</strong> ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
