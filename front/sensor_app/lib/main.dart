@@ -32,14 +32,15 @@ class SensorForm extends StatefulWidget {
 class _SensorFormState extends State<SensorForm> {
   final _formKey = GlobalKey<FormState>();
   final _siteNameController = TextEditingController();
-  final _companyController = TextEditingController(text: '(주)지반계측');
-  final _serverUrlController = TextEditingController(text: 'http://192.168.219.139:8000');
-  final _tController = TextEditingController(text: '0');
-  final _cController = TextEditingController(text: '0');
-  final _seController = TextEditingController(text: '0');
-  final _sController = TextEditingController(text: '0');
-  final _wController = TextEditingController(text: '0');
-  final _iController = TextEditingController(text: '0');
+  final _companyController = TextEditingController();
+  final _tController = TextEditingController();
+  final _cController = TextEditingController();
+  final _seController = TextEditingController();
+  final _sController = TextEditingController();
+  final _wController = TextEditingController();
+  final _iController = TextEditingController();
+  
+  static const String serverUrl = 'https://jreports4.onrender.com';
 
   bool _isLoading = false;
   String _resultMessage = '';
@@ -76,7 +77,7 @@ class _SensorFormState extends State<SensorForm> {
       final siteAddress = extractAddress(siteName);
 
       final response = await http.post(
-        Uri.parse('${_serverUrlController.text}/api/generate-excel/'),
+        Uri.parse('$serverUrl/api/generate-excel/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'site_name': siteName,
@@ -167,7 +168,6 @@ class _SensorFormState extends State<SensorForm> {
                       controller: _siteNameController,
                       decoration: const InputDecoration(
                         labelText: '현장명',
-                        hintText: '예: 한남동 383-1 근린생활시설 신축공사',
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
@@ -184,21 +184,6 @@ class _SensorFormState extends State<SensorForm> {
                         labelText: '계측관리업체',
                         border: OutlineInputBorder(),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _serverUrlController,
-                      decoration: const InputDecoration(
-                        labelText: '서버 주소',
-                        hintText: '예: https://jreports4.onrender.com',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return '서버 주소를 입력하세요';
-                        }
-                        return null;
-                      },
                     ),
                     const SizedBox(height: 24),
                     const Text(
@@ -329,7 +314,6 @@ class _SensorFormState extends State<SensorForm> {
   void dispose() {
     _siteNameController.dispose();
     _companyController.dispose();
-    _serverUrlController.dispose();
     _tController.dispose();
     _cController.dispose();
     _seController.dispose();
