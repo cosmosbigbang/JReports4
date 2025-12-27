@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-=v^e#@mii10bw+mi(yyo0cwo7b($t@rt=gr)%km@*k02387a9y
 
 # SECURITY WARNING: don't run with debug turned on in production!
 import os
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = False
 
 # 개발 단계에서는 로컬/내부망을 허용합니다. 배포 시 제한하세요.
 ALLOWED_HOSTS = ["*"]
