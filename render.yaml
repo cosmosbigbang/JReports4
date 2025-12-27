@@ -3,7 +3,7 @@ services:
     name: jreports-backend
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --timeout 300
+    startCommand: gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --timeout 600 --workers 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0

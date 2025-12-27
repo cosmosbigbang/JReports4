@@ -142,8 +142,6 @@ def create_sensor_excel(sensor_type, count, project_name, site_name=None, compan
         print(f"  ✓ 시트 복제: {new_sheet_name}")
         new_sheet = wb.copy_worksheet(wb[pattern.format(1)])
         new_sheet.title = new_sheet_name
-        new_sheet = wb.copy_worksheet(wb[pattern.format(1)])
-        new_sheet.title = new_sheet_name
     
     # 모든 시트에 현장명/업체명 업데이트
     for i in range(1, count + 1):
@@ -174,6 +172,10 @@ def create_sensor_excel(sensor_type, count, project_name, site_name=None, compan
     # 저장
     wb.save(output_path)
     wb.close()
+    del wb  # 메모리 해제
+    
+    import gc
+    gc.collect()  # 가비지 컨렉션 강제 실행
     
     file_size = os.path.getsize(output_path)
     print(f"✅ 완료: {output_filename} ({file_size:,} bytes)\n")
