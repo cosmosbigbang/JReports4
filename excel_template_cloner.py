@@ -199,17 +199,9 @@ def create_all_sensor_files(sensor_counts, project_name, site_name=None, company
     
     for sensor_type, count in sensor_counts.items():
         if count > 0:
-            result = create_sensor_excel(sensor_type, count, project_name, site_name, company)
-            if result:
-                sensor_names = {
-                    'T': '건물경사계',
-                    'C': '균열측정계',
-                    'SE': '지표침하계',
-                    'S': '변형률계',
-                    'W': '지하수위계',
-                    'I': '지중경사계'
-                }
-                results[sensor_type] = f"{sensor_names[sensor_type]}({project_name}).xlsx"
+            output_path = create_sensor_excel(sensor_type, count, project_name, site_name, company)
+            if output_path:
+                results[sensor_type] = output_path
     
     print(f"\n{'='*60}")
     print(f"✨ 생성 완료: {len(results)}개 파일")

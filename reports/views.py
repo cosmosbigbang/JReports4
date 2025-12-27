@@ -127,6 +127,10 @@ def index(request):
         "version": "1.0 (Vision + Overlay)"
     })
 
+def web_form(request):
+    """웹 폼 페이지"""
+    return render(request, 'web_form.html')
+
 def sensor_form(request):
     """계측기 입력 폼 페이지"""
     return render(request, 'create_sensors.html')

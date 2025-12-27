@@ -133,7 +133,7 @@ class _SensorFormState extends State<SensorForm> {
         }
         
         setState(() {
-          _resultMessage = '✅ 생성 완료!\n저장 위치: ${downloadsDir.path}\n파일: $savedCount개\n시간: ${data['elapsed_time']}초';
+          _resultMessage = '✅ 생성 완료!\n저장 위치: ${downloadsDir?.path ?? "알 수 없음"}\n파일: $savedCount개\n시간: ${data['elapsed_time']}초';
         });
       } else {
         setState(() {

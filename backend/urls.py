@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     
     # --- 웹 페이지 ---
+    path('web/', views.web_form, name='web_form'),  # 웹 폼
     path('create/', views.sensor_form, name='sensor_form'),  # 계측기 입력 폼
     
     # --- J Reports API ---

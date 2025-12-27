@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계측보고서 자동화</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .sensor-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .sensor-item label {
+            color: #667eea;
+            margin-bottom: 6px;
+        }
+        
+        .sensor-item input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .result.active {
+            display: block;
+        }
+        
+        .file-links {
+            margin-top: 15px;
+        }
+        
+        .file-link {
+            display: block;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        
+        .file-link:hover {
+            background: #e8eaf6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 계측보고서 엑셀 자동 생성</h1>
+        
+        <form id="excelForm">
+            <div class="form-group">
+                <label for="siteName">현장명 *</label>
+                <input type="text" id="siteName" name="siteName" required placeholder="예: 한남동 383-1">
+            </div>
+            
+            <div class="form-group">
+                <label for="company">계측관리업체</label>
+                <input type="text" id="company" name="company" placeholder="예: ㈜계측관리">
+            </div>
+            
+            <div class="sensor-grid">
+                <div class="sensor-item">
+                    <label>건물경사계 (T)</label>
+                    <input type="number" name="T" value="0" min="0">
+                </div>
+                <div class="sensor-item">
+                    <label>균열측정계 (C)</label>
+                    <input type="number" name="C" value="0" min="0">
+                </div>
+                <div class="sensor-item">
+                    <label>지표침하계 (SE)</label>
+                    <input type="number" name="SE" value="0" min="0">
+                </div>
+                <div class="sensor-item">
+                    <label>변형률계 (S)</label>
+                    <input type="number" name="S" value="0" min="0">
+                </div>
+                <div class="sensor-item">
+                    <label>지하수위계 (W)</label>
+                    <input type="number" name="W" value="0" min="0">
+                </div>
+                <div class="sensor-item">
+                    <label>지중경사계 (I)</label>
+                    <input type="number" name="I" value="0" min="0">
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">엑셀 파일 생성</button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>엑셀 파일 생성 중...</p>
+        </div>
+        
+        <div class="result" id="result"></div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('excelForm');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        function extractAddress(siteName) {
+            const patterns = [
+                /([가-힣]+동)\s*(\d+[-\d]*)/,
+                /([가-힣]+리)\s*(\d+[-\d]*)/,
+                /([가-힣]+가)\s*(\d+[-\d]*)/
+            ];
+            
+            for (const pattern of patterns) {
+                const match = siteName.match(pattern);
+                if (match) {
+                    return `${match[1]}_${match[2]}`;
+                }
+            }
+            
+            return siteName.replace(/\s/g, '_');
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const siteName = formData.get('siteName');
+            const siteAddress = extractAddress(siteName);
+            const company = formData.get('company');
+            
+            const counts = {
+                T: parseInt(formData.get('T')) || 0,
+                C: parseInt(formData.get('C')) || 0,
+                SE: parseInt(formData.get('SE')) || 0,
+                S: parseInt(formData.get('S')) || 0,
+                W: parseInt(formData.get('W')) || 0,
+                I: parseInt(formData.get('I')) || 0
+            };
+            
+            // 최소 1개 이상 체크
+            const total = Object.values(counts).reduce((a, b) => a + b, 0);
+            if (total === 0) {
+                result.className = 'result error active';
+                result.textContent = '❌ 최소 1개 이상의 계측기를 선택하세요.';
+                return;
+            }
+            
+            // UI 상태 변경
+            submitBtn.disabled = true;
+            loading.classList.add('active');
+            result.classList.remove('active');
+            
+            try {
+                const response = await fetch('/api/generate-excel/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        site_name: siteName,
+                        site_address: siteAddress,
+                        company: company,
+                        counts: counts
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // 파일 다운로드
+                    const files = data.files;
+                    let html = `<strong>✅ 생성 완료!</strong><br>`;
+                    html += `파일 개수: ${files.length}개<br>`;
+                    html += `소요 시간: ${data.elapsed_time}초<br>`;
+                    html += `<div class="file-links">`;
+                    
+                    files.forEach(file => {
+                        // base64 디코딩하여 다운로드
+                        const blob = base64ToBlob(file.data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                        const url = URL.createObjectURL(blob);
+                        html += `<a href="${url}" download="${file.filename}" class="file-link">📥 ${file.filename}</a>`;
+                    });
+                    
+                    html += `</div>`;
+                    
+                    result.className = 'result success active';
+                    result.innerHTML = html;
+                } else {
+                    result.className = 'result error active';
+                    result.textContent = `❌ ${data.message || '오류 발생'}`;
+                }
+            } catch (error) {
+                result.className = 'result error active';
+                result.textContent = `❌ 연결 오류: ${error.message}`;
+            } finally {
+                submitBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        });
+        
+        function base64ToBlob(base64, mimeType) {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], { type: mimeType });
+        }
+    </script>
+</body>
+</html>
