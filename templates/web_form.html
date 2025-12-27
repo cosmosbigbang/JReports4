@@ -311,24 +311,56 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // 파일 다운로드
                     const files = data.files;
-                    let html = `<strong>✅ 생성 완료!</strong><br>`;
-                    html += `파일 개수: ${files.length}개<br>`;
-                    html += `소요 시간: ${data.elapsed_time}초<br>`;
-                    html += `<div class="file-links">`;
+                    const folderName = siteAddress;
                     
-                    files.forEach(file => {
-                        // base64 디코딩하여 다운로드
-                        const blob = base64ToBlob(file.data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                        const url = URL.createObjectURL(blob);
-                        html += `<a href="${url}" download="${file.filename}" class="file-link">📥 ${file.filename}</a>`;
-                    });
-                    
-                    html += `</div>`;
-                    
-                    result.className = 'result success active';
-                    result.innerHTML = html;
+                    // File System Access API 지원 확인
+                    if ('showDirectoryPicker' in window) {
+                        try {
+                            // 사용자에게 폴더 선택 요청
+                            const dirHandle = await window.showDirectoryPicker();
+                            
+                            // 현장명 폴더 생성
+                            const projectDirHandle = await dirHandle.getDirectoryHandle(folderName, { create: true });
+                            
+                            // 각 파일 저장
+                            for (const file of files) {
+                                const fileHandle = await projectDirHandle.getFileHandle(file.filename, { create: true });
+                                const writable = await fileHandle.createWritable();
+                                const blob = base64ToBlob(file.data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                                await writable.write(blob);
+                                await writable.close();
+                            }
+                            
+                            result.className = 'result success active';
+                            result.innerHTML = `<strong>✅ 생성 완료!</strong><br>저장 위치: 선택한 폴더/${folderName}/<br>파일 개수: ${files.length}개<br>소요 시간: ${data.elapsed_time}초`;
+                        } catch (e) {
+                            if (e.name === 'AbortError') {
+                                result.className = 'result error active';
+                                result.textContent = '❌ 폴더 선택이 취소되었습니다.';
+                            } else {
+                                throw e;
+                            }
+                        }
+                    } else {
+                        // File System Access API 미지원 - 개별 파일 다운로드
+                        let html = `<strong>✅ 생성 완료!</strong><br>`;
+                        html += `⚠️ 파일을 하나씩 다운로드합니다.<br>`;
+                        html += `파일 개수: ${files.length}개<br>`;
+                        html += `소요 시간: ${data.elapsed_time}초<br>`;
+                        html += `<div class="file-links">`;
+                        
+                        files.forEach(file => {
+                            const blob = base64ToBlob(file.data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                            const url = URL.createObjectURL(blob);
+                            html += `<a href="${url}" download="${file.filename}" class="file-link">📥 ${file.filename}</a>`;
+                        });
+                        
+                        html += `</div>`;
+                        
+                        result.className = 'result success active';
+                        result.innerHTML = html;
+                    }
                 } else {
                     result.className = 'result error active';
                     result.textContent = `❌ ${data.message || '오류 발생'}`;
